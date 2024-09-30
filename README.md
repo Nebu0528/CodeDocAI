@@ -1,4 +1,4 @@
-# NLP-Powered Code Documentation Generator
+# CodeDocAI: An NLP-Powered Code Documentation Generator
 
 ## Project Overview
 This project aims to help programmers write documentation for their code, using a fine-tuned T5 model to generate readable documentation from code chunks. The training is done on the command line and the documentation is generated on a web interface through Streamlit.
