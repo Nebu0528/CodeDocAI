@@ -26,9 +26,7 @@ This step is necessary to teach the model how to interpret code and generate cor
 ```bash
 https://huggingface.co/datasets/jtatman/python-code-dataset-500k
 ```
-- 1. Add your HuggingFace token in the data_loader.py login(<token here>)
-  - [Generate your token here](https://huggingface.co/settings/tokens)
-- 2. Train the model using:
+- 1. Train the model using:
 ```bash
 python src/model.py
 ```
