@@ -30,7 +30,7 @@ https://huggingface.co/datasets/jtatman/python-code-dataset-500k
 ```bash
 python src/model.py
 ```
-- 2. After training, the model will be saved in the models/t5_code_to_text/ directory.
+- 2. After training, the model will be saved in the models/codetext_t5/ directory.
 
 ### 4. Run the Streamlit App
 Once the model is trained, run the app:
