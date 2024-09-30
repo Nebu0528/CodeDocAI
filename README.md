@@ -19,7 +19,7 @@ cd nlp_code_doc
 ### 2. Install Dependencies
 Run the command below to install all the dependencies needed:
 ```bash
-pip install -r requirements.txt
+pip install -r dependencies.txt
 ```
 ### 3. Train the Model 
 This step is necessary to teach the model how to interpret code and generate corresponding documentation based on that training. The model is being trained on this:
