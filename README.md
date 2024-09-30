@@ -12,7 +12,7 @@ This project aims to help programmers write documentation for their code, using 
 
 ### 1. Clone Repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Nebu0528/CodeDocAI
 cd nlp_code_doc
 ```
 
