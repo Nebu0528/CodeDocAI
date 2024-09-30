@@ -1,4 +1,6 @@
-# List required libraries
-streamlit
+torch
 transformers
-pandas
+streamlit
+tree-sitter
+spacy
+huggingface_hub

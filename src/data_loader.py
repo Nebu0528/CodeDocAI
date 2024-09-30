@@ -1,29 +1,33 @@
 from datasets import load_dataset
+from huggingface_hub import login
+
 
 def load_python_code_data():
+    """
+    Load Python code snippets from the Python Code Dataset.
+    This function retrieves all relevant code snippets without limiting the count.
+    """
+    # Load the Python Code Dataset
+    dataset = load_dataset('jtatman/python-code-dataset-500k', split='train', download_mode='reuse_cache_if_exists')
 
-    # load the python dataset
-    dataset = load_dataset('jtatman/python-code-dataset-500k', split='train')
+    code_data = []
+    doc_data = []
 
-    #lists that contains python lines of code and its associated content
-    python_data = []
-    documentation = []
-
-    # Print every entry in the dataset
+    # Iterate over the dataset
     for entry in dataset:
-        print(entry)  # Print the entry to check its structure
-        #Filter for python
+        #print(entry)  # Print the entry to check its structure
         if 'language' in entry and entry['language'] == 'Python' and 'code' in entry:
-            #Access the code snippets and documentation comments
-            code_content = entry['code'] 
-            comment = entry.get('description', '') 
+            code_content = entry['code']  # Accessing the code snippet
+            comment = entry.get('description', '')  # Use .get() to avoid KeyError
 
-            #Append to the list
             code_data.append(code_content)
-            documentation.append(comment)
+            doc_data.append(comment)
 
-    return code_data, documentation
+    return code_data, doc_data
 
-#Testing
-if __name__ == "__main__":
-    code_data, documentation = load_python_code_data() 
+# For testing purposes
+# if __name__ == "__main__":
+#    code_data, doc_data = load_python_code_data()  # Load all files without limit
+#    print(f"Loaded {len(code_data)} code snippets.")
+#    for code in code_data:
+#        print(code)  # Print each loaded code snippet for verification
