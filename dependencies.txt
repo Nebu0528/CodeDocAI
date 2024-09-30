@@ -1,6 +1,5 @@
 torch
 transformers
 streamlit
-tree-sitter
-spacy
 huggingface_hub
+datasets
