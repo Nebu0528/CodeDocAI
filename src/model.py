@@ -4,7 +4,7 @@ import torch
 import os
 from data_loader import load_python_code_data
 
-class CodeToDocModel:
+class code_doc:
     def __init__(self, model_name="t5-small"):
         #load tokenizer and model
         self.tokenizer = T5Tokenizer.from_pretrained(model_name, legacy=False)
@@ -35,7 +35,7 @@ class CodeToDocModel:
                 #display training process (testing purposes)
                 #print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item()}")
 
-    def save_model(self, path="models/t5_code_to_text/"):
+    def model_to_save(self, path="models/codetext_t5/"):
         # Ensure the path exists before saving
         if not os.path.exists(path):
             os.makedirs(path)
@@ -50,13 +50,8 @@ if __name__ == "__main__":
     code_data, doc_data = load_python_code_data()
 
     #initialize the model and train it
-    model = CodeToDocModel()
+    model = code_doc()
     model.train(code_data, doc_data, epochs=3, batch_size=2)
 
-    #output documentation for each code piece
-    for code, doc in zip(code_data, doc_data):
-        print(f"Input Code:\n{code}\n")
-        print(f"Generated Documentation:\n{doc}\n")
-        
     #save model
-    model.save_model()
+    model.model_to_save()
