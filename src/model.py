@@ -29,6 +29,7 @@ class code_doc:
                 optimizer.zero_grad()
                 outputs = self.model(input_ids=inputs.input_ids, labels=labels)
                 loss = outputs.loss
+                #look into this, possibly not needed
                 loss.backward()
                 optimizer.step()
 
