@@ -7,6 +7,7 @@ from data_loader import load_python_code_data
 class code_doc:
     def __init__(self, model_name="t5-small"):
         #load tokenizer and model
+        
         self.tokenizer = T5Tokenizer.from_pretrained(model_name, legacy=False)
         self.model = T5ForConditionalGeneration.from_pretrained(model_name)
 
