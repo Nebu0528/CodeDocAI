@@ -3,6 +3,7 @@ from data_loader import load_python_code_data
 
 class CodeToDocInference:
     #Initialization of T5 Model
+    
     def __init__(self, model_path="models/t5_code_to_text/"):
         #load the model and tokenizer
         self.tokenizer = T5Tokenizer.from_pretrained(model_path)
