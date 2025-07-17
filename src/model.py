@@ -31,9 +31,8 @@ class code_doc:
                 optimizer.zero_grad()
                 outputs = self.model(input_ids=inputs.input_ids, labels=labels)
                 loss = outputs.loss
-                #look into this, possibly not needed
-                #loss.backward()
-                #optimizer.step()
+                loss.backward()
+                optimizer.step()
 
                 #display training process (testing purposes)
                 #print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item()}")
