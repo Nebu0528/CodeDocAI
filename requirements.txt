@@ -1,6 +1,9 @@
 torch
-transformers
+transformers>=4.30.0
 streamlit
 huggingface_hub
 datasets
+nltk
+numpy
+ast
 

@@ -1,59 +1,77 @@
-
-from transformers import T5Tokenizer, T5ForConditionalGeneration
-from torch.optim import AdamW
+from transformers import T5Tokenizer, T5ForConditionalGeneration, TrainingArguments, Trainer
 import torch
-import os
-from data_loader import load_python_code_data
+from torch.utils.data import Dataset
+import numpy as np
+
+class CodeDocDataset(Dataset):
+    def __init__(self, code_texts, doc_texts, tokenizer, max_length=512):
+        self.tokenizer = tokenizer
+        self.code_texts = code_texts
+        self.doc_texts = doc_texts
+        self.max_length = max_length
+
+    def __len__(self):
+        return len(self.code_texts)
+
+    def __getitem__(self, idx):
+        code = self.code_texts[idx]
+        doc = self.doc_texts[idx]
+
+        # Prepare input and target
+        inputs = self.tokenizer(
+            code,
+            max_length=self.max_length,
+            padding='max_length',
+            truncation=True,
+            return_tensors='pt'
+        )
+
+        targets = self.tokenizer(
+            doc,
+            max_length=self.max_length,
+            padding='max_length',
+            truncation=True,
+            return_tensors='pt'
+        )
+
+        return {
+            'input_ids': inputs['input_ids'].squeeze(),
+            'attention_mask': inputs['attention_mask'].squeeze(),
+            'labels': targets['input_ids'].squeeze()
+        }
 
 class code_doc:
-    def __init__(self, model_name="t5-small"):
-        #load tokenizer and model
-        
+    def __init__(self, model_name="t5-base"):  # Updated to t5-base for better performance
         self.tokenizer = T5Tokenizer.from_pretrained(model_name, legacy=False)
         self.model = T5ForConditionalGeneration.from_pretrained(model_name)
+        
+        # Add special tokens for code structure
+        special_tokens = ['<func>', '</func>', '<param>', '</param>', '<desc>', '</desc>']
+        self.tokenizer.add_special_tokens({'additional_special_tokens': special_tokens})
+        self.model.resize_token_embeddings(len(self.tokenizer))
 
-    def train(self, code_data, doc_data, epochs=3, batch_size=4):
-        #set the optimizer using AdamW
-        optimizer = AdamW(self.model.parameters(), lr=5e-5)
-        for epoch in range(epochs):
-            for i in range(0, len(code_data), batch_size):
-                #prepare batch data
-                batch_code = code_data[i:i+batch_size]
-                batch_docs = doc_data[i:i+batch_size]
+    def train(self, code_data, doc_data, epochs=5, batch_size=8):
+        # Create dataset
+        dataset = CodeDocDataset(code_data, doc_data, self.tokenizer)
+        
+        # Define training arguments
+        training_args = TrainingArguments(
+            output_dir="./results",
+            num_train_epochs=epochs,
+            per_device_train_batch_size=batch_size,
+            warmup_steps=500,
+            weight_decay=0.01,
+            logging_dir='./logs',
+            logging_steps=100,
+            save_strategy="epoch"
+        )
 
-                #tokenize the input code and documentation for the model
-                inputs = self.tokenizer(batch_code, return_tensors="pt", padding=True, truncation=True)
-                labels = self.tokenizer(batch_docs, return_tensors="pt", padding=True, truncation=True).input_ids
+        # Initialize trainer
+        trainer = Trainer(
+            model=self.model,
+            args=training_args,
+            train_dataset=dataset
+        )
 
-                #zero gradients before backward pass
-                #forward pass through the model
-                #then compute loss and perform backpropagation
-                optimizer.zero_grad()
-                outputs = self.model(input_ids=inputs.input_ids, labels=labels)
-                loss = outputs.loss
-                loss.backward()
-                optimizer.step()
-
-                #display training process (testing purposes)
-                #print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item()}")
-
-    def model_to_save(self, path="models/codetext_t5/"):
-        # Ensure the path exists before saving
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-        # Save the model and tokenizer
-        self.model.save_pretrained(path)
-        self.tokenizer.save_pretrained(path)
-        #print(f"Model and tokenizer saved to {path}")
-
-if __name__ == "__main__":
-    #load training data
-    code_data, doc_data = load_python_code_data()
-
-    #initialize the model and train it
-    model = code_doc()
-    model.train(code_data, doc_data, epochs=3, batch_size=2)
-
-    #save model
-    model.model_to_save()
+        # Train the model
+        trainer.train()

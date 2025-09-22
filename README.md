@@ -62,3 +62,13 @@ def multiply(a, b):
 3. Handle different training dataset types (i.e .json, csv etc..)
 4. Being able to download the generated documentation
 5. Train the model on this [dataset](https://huggingface.co/datasets/bigcode/the-stack)
+
+## Evaluate the Model
+
+To evaluate the model's performance using BLEU scores, run the following command:
+
+```bash
+python src/evaluate.py
+```
+
+This will calculate the average BLEU score for the model's generated documentation compared to the reference documentation.
