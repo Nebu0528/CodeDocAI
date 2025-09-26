@@ -1,0 +1,56 @@
+{
+  "model_config": {
+    "model_name": "t5-base",
+    "model_path": "models/codetext_t5",
+    "max_length": 512,
+    "max_new_tokens": 200,
+    "num_beams": 4,
+    "length_penalty": 2.0,
+    "early_stopping": true,
+    "temperature": 1.0,
+    "top_k": 50,
+    "top_p": 0.95
+  },
+  "training_config": {
+    "output_dir": "./results",
+    "epochs": 5,
+    "batch_size": 8,
+    "learning_rate": 5e-05,
+    "warmup_steps": 500,
+    "weight_decay": 0.01,
+    "logging_dir": "./logs",
+    "logging_steps": 100,
+    "save_strategy": "epoch",
+    "evaluation_strategy": "epoch",
+    "save_total_limit": 3,
+    "load_best_model_at_end": true,
+    "metric_for_best_model": "eval_loss",
+    "greater_is_better": false
+  },
+  "data_config": {
+    "dataset_name": "jtatman/python-code-dataset-500k",
+    "training_data_path": "data/training_data.txt",
+    "max_samples": null,
+    "test_split": 0.2,
+    "validation_split": 0.1,
+    "min_code_length": 50,
+    "max_code_length": 2048,
+    "min_doc_length": 10,
+    "max_doc_length": 512
+  },
+  "web_config": {
+    "host": "localhost",
+    "port": 8501,
+    "title": "CodeDocAI - Generate Documentation for Code",
+    "description": "Transform your code into comprehensive documentation using AI",
+    "max_file_size": 1048576,
+    "allowed_extensions": [".py", ".js", ".java", ".cpp", ".c", ".go", ".rs"]
+  },
+  "logging_config": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "log_dir": "logs",
+    "max_log_files": 5,
+    "log_file_size": 10485760
+  }
+}

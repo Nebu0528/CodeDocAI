@@ -1,10 +1,23 @@
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import ast
+import sys
+import os
+
+# Add the src directory to the path for imports
+src_path = os.path.dirname(os.path.abspath(__file__))
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+
+from config import config
 
 class CodeToDocInference:
-    def __init__(self, model_path="models/codetext_t5"):
+    def __init__(self, model_path=None):
+        if model_path is None:
+            model_path = config.model_config.model_path
+        
         self.tokenizer = T5Tokenizer.from_pretrained(model_path)
         self.model = T5ForConditionalGeneration.from_pretrained(model_path)
+        self.config = config.model_config
 
     def parse_code(self, code_snippet):
         """Parse the input code to extract relevant information."""
@@ -37,13 +50,23 @@ class CodeToDocInference:
         )
 
         # Generate documentation
-        inputs = self.tokenizer(structured_input, return_tensors="pt", padding=True, truncation=True)
+        inputs = self.tokenizer(
+            structured_input, 
+            return_tensors="pt", 
+            padding=True, 
+            truncation=True, 
+            max_length=self.config.max_length
+        )
         outputs = self.model.generate(
             inputs['input_ids'],
-            max_length=200,
-            num_beams=4,
-            length_penalty=2.0,
-            early_stopping=True
+            max_new_tokens=self.config.max_new_tokens,
+            num_beams=self.config.num_beams,
+            length_penalty=self.config.length_penalty,
+            early_stopping=self.config.early_stopping,
+            temperature=self.config.temperature,
+            top_k=self.config.top_k,
+            top_p=self.config.top_p,
+            do_sample=True if self.config.temperature > 1.0 else False
         )
 
         # Decode and format the output
@@ -71,13 +94,29 @@ Returns:
 
     def generate_param_desc(self, param):
         """Generate specific description for a parameter."""
-        inputs = self.tokenizer(f"Describe parameter {param}:", return_tensors="pt")
-        outputs = self.model.generate(inputs['input_ids'], max_length=50)
+        inputs = self.tokenizer(
+            f"Describe parameter {param}:", 
+            return_tensors="pt",
+            max_length=self.config.max_length
+        )
+        outputs = self.model.generate(
+            inputs['input_ids'], 
+            max_new_tokens=50,
+            temperature=self.config.temperature
+        )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     def generate_return_desc(self, return_type):
         """Generate description for the return value."""
         return_type = return_type if return_type else "None"
-        inputs = self.tokenizer(f"Describe return value of type {return_type}:", return_tensors="pt")
-        outputs = self.model.generate(inputs['input_ids'], max_length=50)
+        inputs = self.tokenizer(
+            f"Describe return value of type {return_type}:", 
+            return_tensors="pt",
+            max_length=self.config.max_length
+        )
+        outputs = self.model.generate(
+            inputs['input_ids'], 
+            max_new_tokens=50,
+            temperature=self.config.temperature
+        )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
