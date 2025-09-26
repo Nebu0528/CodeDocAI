@@ -12,9 +12,6 @@ from evaluate import CodeDocEvaluator
 from inference import CodeToDocInference  
 from config import config
 
-
-
-
 st.set_page_config(
     page_title=config.web_config.title,
     page_icon="📚",
@@ -24,41 +21,89 @@ st.set_page_config(
 st.title(config.web_config.title)
 st.markdown(config.web_config.description)
 
-# Sidebar with configuration options
+# Sidebar for configuration
 with st.sidebar:
-    st.header("Configuration")
+    st.header("⚙️ Configuration")
     
-    # Model settings
-    st.subheader("Generation Settings")
-    temperature = st.slider(
-        "Temperature", 
-        min_value=0.1, 
-        max_value=2.0, 
-        value=config.model_config.temperature,
-        step=0.1,
-        help="Higher values make output more creative but less focused"
-    )
+    # API Configuration
+    st.subheader("🌐 API Configuration")
+    use_api = st.checkbox("Use API Instead of Local Model", 
+                         value=config.model_config.use_api,
+                         help="Use external AI APIs for better quality documentation")
     
-    num_beams = st.slider(
-        "Number of Beams", 
-        min_value=1, 
-        max_value=10, 
-        value=config.model_config.num_beams,
-        help="More beams generally produce better quality but slower generation"
-    )
+    api_provider = None
+    api_key = None
+    api_model = None
     
-    max_new_tokens = st.slider(
-        "Max New Tokens", 
-        min_value=50, 
-        max_value=500, 
-        value=config.model_config.max_new_tokens,
-        help="Maximum length of generated documentation"
-    )
-
-# Update config with user settings
-config.model_config.temperature = temperature
-config.model_config.num_beams = num_beams
-config.model_config.max_new_tokens = max_new_tokens
+    if use_api:
+        api_provider = st.selectbox("API Provider", 
+                                   options=["openai", "anthropic", "gemini"],
+                                   index=0 if config.model_config.api_provider == "openai" 
+                                   else 1 if config.model_config.api_provider == "anthropic"
+                                   else 2 if config.model_config.api_provider == "gemini"
+                                   else 0)
+        
+        # API Key input
+        api_key = st.text_input("API Key", 
+                               type="password",
+                               value=config.model_config.api_key or "",
+                               help="Your API key for the selected provider")
+        
+        # Model selection based on provider
+        if api_provider == "openai":
+            default_models = ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
+            default_model = config.model_config.api_model or "gpt-3.5-turbo"
+        elif api_provider == "anthropic":
+            default_models = ["claude-3-haiku-20240307", "claude-3-sonnet-20240229", "claude-3-opus-20240229"]
+            default_model = config.model_config.api_model or "claude-3-haiku-20240307"
+        elif api_provider == "gemini":
+            default_models = ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-pro"]
+            default_model = config.model_config.api_model or "gemini-2.0-flash"
+        else:
+            default_models = ["gpt-3.5-turbo"]
+            default_model = "gpt-3.5-turbo"
+        
+        api_model = st.selectbox("Model", 
+                                options=default_models,
+                                index=default_models.index(default_model) if default_model in default_models else 0)
+        
+        # Update API config
+        config.model_config.use_api = use_api
+        config.model_config.api_provider = api_provider
+        config.model_config.api_key = api_key
+        config.model_config.api_model = api_model
+    else:
+        config.model_config.use_api = use_api
+    
+    st.divider()
+    
+    # Model parameters
+    st.subheader("🔧 Model Parameters")
+    max_length = st.slider("Max Length", min_value=50, max_value=1000, 
+                          value=config.model_config.max_length, step=50)
+    max_new_tokens = st.slider("Max New Tokens", min_value=20, max_value=500, 
+                              value=config.model_config.max_new_tokens, step=20)
+    temperature = st.slider("Temperature", min_value=0.1, max_value=2.0, 
+                           value=config.model_config.temperature, step=0.1)
+    
+    if not use_api:
+        # Additional parameters for local model
+        num_beams = st.slider("Num Beams", min_value=1, max_value=10, 
+                             value=config.model_config.num_beams, step=1)
+        top_k = st.slider("Top K", min_value=1, max_value=100, 
+                         value=config.model_config.top_k, step=5)
+        top_p = st.slider("Top P", min_value=0.1, max_value=1.0, 
+                         value=config.model_config.top_p, step=0.1)
+        
+        # Update local model config
+        config.model_config.num_beams = num_beams
+        config.model_config.top_k = top_k
+        config.model_config.top_p = top_p
+    
+    # Update common config in memory
+    config.model_config.max_length = max_length
+    config.model_config.max_new_tokens = max_new_tokens
+    config.model_config.temperature = temperature
 
 # Main content area
 col1, col2 = st.columns([1, 1])
@@ -98,7 +143,14 @@ with col2:
         if code_to_process:
             with st.spinner("Generating documentation..."):
                 try:
-                    infer = CodeToDocInference()
+                    # Initialize inference engine based on configuration
+                    if config.model_config.use_api and config.model_config.api_key:
+                        from api_inference import HybridInference
+                        infer = HybridInference(use_api=True, api_key=config.model_config.api_key)
+                    else:
+                        from inference import CodeToDocInference
+                        infer = CodeToDocInference()
+                        
                     documentation = infer.generate_doc(code_to_process)
                     
                     # Display generated documentation
