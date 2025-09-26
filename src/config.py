@@ -18,6 +18,13 @@ class ModelConfig:
     temperature: float = 1.0
     top_k: int = 50
     top_p: float = 0.95
+    
+    # API Configuration
+    use_api: bool = False
+    api_provider: str = "openai"  # openai, anthropic, gemini
+    api_key: Optional[str] = None
+    api_model: Optional[str] = None  # Provider-specific: gpt-3.5-turbo, claude-3-haiku-20240307, gemini-2.0-flash
+    api_base_url: Optional[str] = None
 
 @dataclass
 class TrainingConfig:
@@ -97,6 +104,13 @@ class AppConfig:
         config.model_config.max_new_tokens = int(os.getenv('MAX_NEW_TOKENS', str(config.model_config.max_new_tokens)))
         config.model_config.num_beams = int(os.getenv('NUM_BEAMS', str(config.model_config.num_beams)))
         config.model_config.temperature = float(os.getenv('TEMPERATURE', str(config.model_config.temperature)))
+        
+        # API configuration from environment
+        config.model_config.use_api = os.getenv('USE_API', '').lower() in ('true', '1', 'yes')
+        config.model_config.api_provider = os.getenv('API_PROVIDER', config.model_config.api_provider)
+        config.model_config.api_key = os.getenv('API_KEY', config.model_config.api_key)
+        config.model_config.api_model = os.getenv('API_MODEL', config.model_config.api_model)
+        config.model_config.api_base_url = os.getenv('API_BASE_URL', config.model_config.api_base_url)
         
         # Training configuration from environment
         config.training_config.epochs = int(os.getenv('EPOCHS', str(config.training_config.epochs)))
